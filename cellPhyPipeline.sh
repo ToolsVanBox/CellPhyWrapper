@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#SBATCH --time=8:0:0
+#SBATCH -c 8
+#SBATCH --mail-type=FAIL,END
+#SBATCH --mail-user=r.hagelaar@prinsesmaximacentrum.nl
+
 # define default parameter settings ---------------
 ERROR="true"
 MODEL="GT16+FO"
@@ -9,8 +14,14 @@ OUTPUTDIR=$(pwd) # CHECK IF THIS WORKS
 SEED=2
 NBOOTSTRAP=100
 CELLPHY=/hpc/pmc_vanboxtel/tools/external/cellphy/cellphy.sh
+SUPPORT_MAP=/hpc/pmc_vanboxtel/tools/external/cellphy/script/support-map.R
 OUTGROUP="NONE"
-PTATO="NONE"
+PTATODIR="NONE"
+SOURCE=$(dirname ${BASH_SOURCE[0]} )
+
+# Load module since R is not standard available on the HPC
+#module load R/4.3.0
+module load R/4.1.2
 
 # user message ---------------
 usage_msg="Usage: Cellphy Wrapper
@@ -38,17 +49,20 @@ if [[ $# -eq 0 ]] ; then
     exit 0
 fi
 
+echo $@
+POSITIONAL=()
+
 # capture user input ---------------
-while true; do
+while [[ $# -gt 0 ]]; do
         case "$1" in
                 --input)
                         INPUT="$2"
                         shift 2
                         ;;
-	        	--outgr)
-		            	OUTGROUP="$2"
-			            shift 2
-			            ;;
+	        --outgr)
+	            	OUTGROUP="$2"
+                        shift 2
+                        ;;
                 --ptato)
                         PTATODIR="$2"
                         shift 2
@@ -81,6 +95,10 @@ while true; do
                         NBOOTSTRAP="$2"
                         shift 2
                         ;;
+                --prefix)
+                        PREFIX="$2"
+                        shift 2
+                        ;;
                 --help)
                         usage
                         exit
@@ -108,6 +126,13 @@ if [[ $OUTGROUP == "NONE" ]]; then
 	echo "please define an outgroup using --outgr"
 	exit
 fi
+
+# Create prefix if no prefix is given
+if [ -z "$PREFIX" ] ; then 
+        PREFIX=${INPUT/%.vcf/}
+        PREFIX=$(basename ${PREFIX})
+fi
+
 # process the input variables ---------------
 # build the command to build the tree: add "prob-msa off" when cellphy should be run on GT instead of the default PL
 TREE_COMM="bash ${CELLPHY} RAXML --msa ${INPUT} --msa-format VCF --model ${MODEL} --seed ${SEED} --threads ${THREADS} --prefix ${PREFIX}.Tree"
@@ -115,13 +140,12 @@ if [[ $INPUTTYPE != "GL" ]]; then
         TREE_COMM=${TREE_COMM}" --prob-msa off"
 fi
 
-PREFIX=${VCF/%.vcf/}
-PREFIX=$(basename ${PREFIX})
+
 cd $OUTPUTDIR
 
 # run cellphy ---------------
 # find the best tree
-$TREE_COMM
+eval "$TREE_COMM"
 # do bootstrapping to determine confidence
 bash ${CELLPHY} RAXML --bootstrap --msa ${INPUT} --model ${MODEL} --seed ${SEED} --threads ${THREADS} --bs-trees ${NBOOTSTRAP} --prefix ${PREFIX}.Boot
 # summarize bootstrap results
@@ -129,5 +153,26 @@ bash ${CELLPHY} RAXML --support -tree ${PREFIX}.Tree.raxml.bestTree --bs-trees $
 # map mutations to the tree
 bash ${CELLPHY} RAXML --mutmap --msa ${INPUT} --msa-format VCF -model ${PREFIX}.Tree.raxml.bestModel -tree ${PREFIX}.Tree.raxml.bestTree --prefix ${PREFIX}.Support --threads ${THREADS} --opt-branches off
 
+# Default cellphy tree  
+Rscript ${SUPPORT_MAP} ${PREFIX}.Support.raxml.support ${OUTGROUP}
+
+
+echo "${SOURCE}"
 # make the tree in R ---------------
-Rscript --vanilla cellPhyPlotTree.R $OUTDIR $INPUT $PTATODIR $OUTGROUP
+#Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP
+
+
+# Fix prefix, wrong place, wrong substitution 
+#       - Check if it can handle .vcf.gz
+# Can it handle PTATO vcf? 
+# Can it handle IAP vcf? 
+# Output looks like? 
+# Clean up R script 
+# Give it more cores
+
+
+
+
+# Labels incorrect, code works 
+
+
