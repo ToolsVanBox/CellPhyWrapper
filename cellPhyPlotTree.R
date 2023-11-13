@@ -1,5 +1,18 @@
-########## THIS SHOULD NOT BE HARD CODED
-source("/hpc/pmc_vanboxtel/tools/external/cellphy_scripts/cellPhyUtils")
+#!/usr/bin/env Rscript
+
+.getSourceDir <- function() {
+  cmdArgs <- commandArgs(trailingOnly=FALSE)
+  fileArg <- "--file="
+  match <- grep(fileArg, cmdArgs)
+  if (length(match) > 0) {
+    sourcedir <- dirname(gsub(fileArg, "", cmdArgs[match]))
+  }
+  return( sourcedir )
+}
+sourcedir <- .getSourceDir()
+
+# Load libraries
+source(paste(sourcedir, "/cellPhyUtils.R",sep=""), chdir = T)
 library(BSgenome.Hsapiens.NCBI.GRCh38)
 library(VariantAnnotation)
 
@@ -21,8 +34,25 @@ if (ptato_dir != "NONE") {
 vcf = readVcf(vcf_file)
 seqlevels(vcf, pruning.mode = 'tidy') = c(1:22, "X", "Y")
 
+# If no VAF column is present create one 
+if (is.null(geno(vcf)$VAF)){
+  print("Empty VAF")
+  mydf <- data.frame(matrix(NA, nrow = nrow(vcf)))
+  # Calculate VAF per sample 
+  for (sname in samples(header(vcf))) {
+    ad <- sapply(geno(vcf)$AD[,sname],"[[",2)
+    dp <- geno(vcf)$DP[,sname]
+    VAF <- ad/dp
+    mydf[[sname]] <- as.numeric(VAF)
+  }
+  # Add VAF to vcf
+  mydf <- mydf[-1]
+  geno(header(vcf))["VAF",] = list("1","Float","Varient Allele Frequency")
+  geno(vcf)$VAF <- mydf
+}
+
 # load the tree, all annotations (muts, boots), and filter end-branches
-load_tree_with_info(
+cell_phy_tree <- load_tree_with_info(
   dir = cellphydir,
   outgr = outgroup,
   vcf = vcf,
@@ -33,7 +63,7 @@ load_tree_with_info(
 )
 
 # plot the tree
-tree_plot = ggtree(tree_list_cp2[[n_tree]], branch.length = 'branch_length', aes(color = group)) +
+tree_plot = ggtree(cell_phy_tree, branch.length = 'branch_length') + #, aes(color = group)) +
   geom_text(aes(x = branch, label = n_boot), color = 'grey50', nudge_y = 0.5, nudge_x = 1) +
   geom_text(aes(x = branch, label = branch_length), color = 'black', nudge_y = -0.5, nudge_x = 1) +
   geom_tiplab(size=3) + 
@@ -46,6 +76,11 @@ ggsave(plot = tree_plot, filename = paste0(cellphydir, "/CellPhyTreeInitial.pdf"
 
 ### HERE POSSIBLY CODE WITH REFITTING STANDARD COSMIC SIGNATURES TO BRANCHES
 
+
+#### ToDo for monday: 
+# Add your changed to the actual script
+# Save RDS object of tree
+# Add PTATO filtering
 
 
 
