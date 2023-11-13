@@ -17,7 +17,8 @@ read_ggtree <- function(file) {
 # root the tree --------------------------------------------
 root_tree <- function(tree, outgr, add_info = FALSE) {
   if (outgr != "NONE") {
-    tree = treeio::root(tree, outgroup = outgr, resolve.root = TRUE)
+    tree = treeio::root(tree, outgroup = outgr, resolve.root = TRUE, edgelabel = TRUE)
+    tree@phylo$tip.label = tree@data$tip.label[order(tree@data$node)][1:length(tree@phylo$tip.label)]
   } else {
     tree = tree
   }
@@ -222,14 +223,19 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
         tree@data$branch_length[i] = 0
       }
     }
-    tree = root_tree(tree, outgr, add_info = TRUE)
+    
     
     # check if "OUTGROUP" branch mutations are correct, or belong to the other branch
     outgr_branch = which(sapply(tree@data$samples, function(s) { all(strsplit(s, "\\|")[[1]] == outgr) }))
+    tree = root_tree(tree, outgr, add_info = TRUE)
+    
+    # First select the samples, then do the split 
     normal_muts = strsplit(tree@data$mutation_names, "\\|")[[outgr_branch]]
+    print("Did it pass my error?")
     if (length(normal_muts) > 0) {
       vcf_names = gsub("_.*", "", names(vcf))
       normal_vcf = vcf[vcf_names %in% normal_muts]
+      
       # extract VAF and calculate how frequent in outgroup
       vafs = normal_vcf@assays@data$VAF %>% apply(2, unlist)
       vafs[is.na(vafs)] = 0
