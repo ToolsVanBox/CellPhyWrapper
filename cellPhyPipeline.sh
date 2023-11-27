@@ -2,8 +2,7 @@
 
 #SBATCH --time=8:0:0
 #SBATCH -c 8
-#SBATCH --mail-type=FAIL,END
-#SBATCH --mail-user=r.hagelaar@prinsesmaximacentrum.nl
+
 
 # define default parameter settings ---------------
 ERROR="true"
@@ -17,11 +16,26 @@ CELLPHY=/hpc/pmc_vanboxtel/tools/external/cellphy/cellphy.sh
 SUPPORT_MAP=/hpc/pmc_vanboxtel/tools/external/cellphy/script/support-map.R
 OUTGROUP="NONE"
 PTATODIR="NONE"
-SOURCE=$(dirname ${BASH_SOURCE[0]} )
+
+#SOURCE=$(dirname ${BASH_SOURCE[0]} )
+#echo "${SLURM_JOB_ID}"
+if [ -n $SLURM_JOB_ID ];  then
+        # check the original location through scontrol and $SLURM_JOB_ID
+        SOURCE=$(scontrol show job $SLURM_JOBID | awk -F= '/Command=/{print $2}' | awk '{print $1}' |  sed 's:/[^/]*$::')
+        #echo "Sbatch start"
+        #echo "${SCRIPT_PATH}"
+#else
+#        # otherwise: started with bash. Get the real location.
+#        SCRIPT_PATH=$(realpath $0)
+#        echo "Bash start"
+#        echo "${SCRIPT_PATH}"
+fi
+#echo "${SCRIPT_PATH}"
+
 
 # Load module since R is not standard available on the HPC
-#module load R/4.3.0
-module load R/4.1.2
+module load R/4.3.0
+#module load R/4.1.2
 
 # user message ---------------
 usage_msg="Usage: Cellphy Wrapper
@@ -157,22 +171,22 @@ bash ${CELLPHY} RAXML --mutmap --msa ${INPUT} --msa-format VCF -model ${PREFIX}.
 Rscript ${SUPPORT_MAP} ${PREFIX}.Support.raxml.support ${OUTGROUP}
 
 
-echo "${SOURCE}"
+
 # make the tree in R ---------------
-#Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP
+Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP
+
+
+
 
 
 # Fix prefix, wrong place, wrong substitution 
 #       - Check if it can handle .vcf.gz
 # Can it handle PTATO vcf? 
 # Can it handle IAP vcf? 
-# Output looks like? 
-# Clean up R script 
 # Give it more cores
 
 
 
 
-# Labels incorrect, code works 
 
 
