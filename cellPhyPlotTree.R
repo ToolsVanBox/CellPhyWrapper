@@ -9,7 +9,9 @@
   }
   return( sourcedir )
 }
+
 sourcedir <- .getSourceDir()
+print(sourcedir)
 
 # Load libraries
 source(paste(sourcedir, "/cellPhyUtils.R",sep=""), chdir = T)
@@ -70,9 +72,10 @@ tree_plot = ggtree(cell_phy_tree, branch.length = 'branch_length') + #, aes(colo
   coord_cartesian(clip = 'off') +
   theme(plot.margin = unit(c(10,100,10,10), 'points'))
 
-ggsave(plot = tree_plot, filename = paste0(cellphydir, "/CellPhyTreeInitial.pdf"), 
+ggsave(plot = tree_plot, filename = paste0(cellphydir, "/CellPhyWrapperTree.pdf"), 
        width = 10, height = 7)
 
+saveRDS(cell_phy_tree, file = paste0(cellphydir, "/TreeObject.RDS"))
 
 ### HERE POSSIBLY CODE WITH REFITTING STANDARD COSMIC SIGNATURES TO BRANCHES
 
