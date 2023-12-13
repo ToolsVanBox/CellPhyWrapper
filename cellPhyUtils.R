@@ -263,10 +263,11 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
     
     # filter PTATO if present
     if (length(ptato_grl) > 1 && any(class(ptato_grl) == "CompressedGRangesList")) {
-      n1_samps = setNames(tree@data$node_id, tree@data$tip.label) %>%
-        grep("n1", ., value = T)
-      n1_samps = n1_samps[grepl("PTA", names(n1_samps))]
+      n1_samps = setNames(tree@data$node_id, tree@data$tip.label)
+      n1_samps = n1_samps[!is.na(names(n1_samps))]
+      n1_samps = grep("n1", n1_samps, value = T)
       vcf_names = gsub("_.*", "", names(vcf))
+
       for (br_name in n1_samps) {
         pta_samp = names(n1_samps)[n1_samps == br_name]
         muts = strsplit(tree@data$mutation_names, "\\|")[[which(tree@data$node_id == br_name)]]
