@@ -284,8 +284,9 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
     
     # remove endbranch mutations that are found in more than 1 sample
     if (cellphy_rm_non1) {
-      n1_samps = setNames(tree@data$node_id, tree@data$tip.label) %>%
-        grep("n1", ., value = T)
+      n1_samps = setNames(tree@data$node_id, tree@data$tip.label)
+      n1_samps = n1_samps[!is.na(names(n1_samps))]
+      n1_samps = grep("n1", n1_samps, value = T)
       vcf_names = gsub("_.*", "", names(vcf))
       vaf = vcf@assays@data$VAF %>% 
         apply(2, unlist)
