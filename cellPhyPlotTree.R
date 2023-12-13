@@ -66,7 +66,7 @@ cell_phy_tree <- load_tree_with_info(
 
 # plot the tree
 tree_plot = ggtree(cell_phy_tree, branch.length = 'branch_length') + #, aes(color = group)) +
-  geom_text(aes(x = branch, label = n_boot), color = 'grey50', nudge_y = 0.5, nudge_x = 1) +
+  geom_nodelab(aes(label = n_boot), geom = 'label', color = 'grey50', fill = rgb(1,1,1,0.7), size = 2) +
   geom_text(aes(x = branch, label = branch_length), color = 'black', nudge_y = -0.5, nudge_x = 1) +
   geom_tiplab(size=3) + 
   coord_cartesian(clip = 'off') +
