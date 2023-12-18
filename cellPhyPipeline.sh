@@ -98,7 +98,7 @@ while [[ $# -gt 0 ]]; do
                         shift 2
                         ;;
                 --outputdir)
-                        OUTPUTDIR="$2"
+                        OUTPUTDIR=$(realpath "$2")
                         shift 2
                         ;;
                 --seed)
