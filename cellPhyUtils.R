@@ -240,11 +240,12 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
       # extract VAF and calculate how frequent in outgroup
       vafs = normal_vcf@assays@data$VAF %>% apply(2, unlist)
       vafs[is.na(vafs)] = 0
+      if (is.null(dim(vafs))) { vafs = matrix(vafs, nrow = 1) }
       colnames(vafs) = samples(header(vcf))
       normal_pres_frac = sum(vafs[ ,outgr] > 0)/nrow(vafs)
       n_samp = rowSums(vafs > 0)
       high_samp_frac = sum(n_samp > 2 & vafs[ ,outgr] == 0)/nrow(vafs)
-      other_vaf = vafs[ ,setdiff(colnames(vafs), outgr)]
+      other_vaf = vafs[ ,setdiff(colnames(vafs), outgr), drop = FALSE]
       n_others = rowSums(other_vaf > 0)
       frac_all_others = sum(n_others == ncol(other_vaf))/nrow(vafs)
       other_branch = which(sapply(strsplit(tree@data$samples, '\\|'), function(s) all(colnames(other_vaf) %in% s)))
