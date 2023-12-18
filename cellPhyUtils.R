@@ -155,8 +155,9 @@ assign_muts_to_branches_simple <- function(vcf, tree, add1missing = TRUE, ptato_
     return(wbranch)
   } else {
     # filter PTATO if present
-    n1_samps = setNames(tree@data$node_id, tree@data$tip.label) %>%
-      grep("n1", ., value = T)
+    n1_samps = setNames(tree@data$node_id, tree@data$tip.label)
+    n1_samps = n1_samps[!is.na(names(n1_samps))]
+    n1_samps = grep("n1", n1_samps, value = T)
     n1_samps = n1_samps[grepl("PTA", names(n1_samps))]
     
     for (br_name in n1_samps) {
