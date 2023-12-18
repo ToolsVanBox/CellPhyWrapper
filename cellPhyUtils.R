@@ -155,8 +155,9 @@ assign_muts_to_branches_simple <- function(vcf, tree, add1missing = TRUE, ptato_
     return(wbranch)
   } else {
     # filter PTATO if present
-    n1_samps = setNames(tree@data$node_id, tree@data$tip.label) %>%
-      grep("n1", ., value = T)
+    n1_samps = setNames(tree@data$node_id, tree@data$tip.label)
+    n1_samps = n1_samps[!is.na(names(n1_samps))]
+    n1_samps = grep("n1", n1_samps, value = T)
     n1_samps = n1_samps[grepl("PTA", names(n1_samps))]
     
     for (br_name in n1_samps) {
@@ -238,11 +239,12 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
       # extract VAF and calculate how frequent in outgroup
       vafs = normal_vcf@assays@data$VAF %>% apply(2, unlist)
       vafs[is.na(vafs)] = 0
+      if (is.null(dim(vafs))) { vafs = matrix(vafs, nrow = 1) }
       colnames(vafs) = samples(header(vcf))
       normal_pres_frac = sum(vafs[ ,outgr] > 0)/nrow(vafs)
       n_samp = rowSums(vafs > 0)
       high_samp_frac = sum(n_samp > 2 & vafs[ ,outgr] == 0)/nrow(vafs)
-      other_vaf = vafs[ ,setdiff(colnames(vafs), outgr)]
+      other_vaf = vafs[ ,setdiff(colnames(vafs), outgr), drop = FALSE]
       n_others = rowSums(other_vaf > 0)
       frac_all_others = sum(n_others == ncol(other_vaf))/nrow(vafs)
       other_branch = which(sapply(strsplit(tree@data$samples, '\\|'), function(s) all(colnames(other_vaf) %in% s)))
@@ -262,10 +264,11 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
     
     # filter PTATO if present
     if (length(ptato_grl) > 1 && any(class(ptato_grl) == "CompressedGRangesList")) {
-      n1_samps = setNames(tree@data$node_id, tree@data$tip.label) %>%
-        grep("n1", ., value = T)
-      n1_samps = n1_samps[grepl("PTA", names(n1_samps))]
+      n1_samps = setNames(tree@data$node_id, tree@data$tip.label)
+      n1_samps = n1_samps[!is.na(names(n1_samps))]
+      n1_samps = grep("n1", n1_samps, value = T)
       vcf_names = gsub("_.*", "", names(vcf))
+
       for (br_name in n1_samps) {
         pta_samp = names(n1_samps)[n1_samps == br_name]
         muts = strsplit(tree@data$mutation_names, "\\|")[[which(tree@data$node_id == br_name)]]
@@ -282,8 +285,9 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
     
     # remove endbranch mutations that are found in more than 1 sample
     if (cellphy_rm_non1) {
-      n1_samps = setNames(tree@data$node_id, tree@data$tip.label) %>%
-        grep("n1", ., value = T)
+      n1_samps = setNames(tree@data$node_id, tree@data$tip.label)
+      n1_samps = n1_samps[!is.na(names(n1_samps))]
+      n1_samps = grep("n1", n1_samps, value = T)
       vcf_names = gsub("_.*", "", names(vcf))
       vaf = vcf@assays@data$VAF %>% 
         apply(2, unlist)
