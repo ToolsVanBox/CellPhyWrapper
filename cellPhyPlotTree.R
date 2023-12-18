@@ -17,6 +17,8 @@ print(sourcedir)
 source(paste(sourcedir, "/cellPhyUtils.R",sep=""), chdir = T)
 library(BSgenome.Hsapiens.NCBI.GRCh38)
 library(VariantAnnotation)
+ref_genome <- "BSgenome.Hsapiens.NCBI.GRCh38"
+library(ref_genome, character.only = TRUE)
 
 # get command arguments
 args = commandArgs(trailingOnly = TRUE)
@@ -84,6 +86,6 @@ saveRDS(cell_phy_tree, file = paste0(cellphydir, "/TreeObject.RDS"))
 # Add your changed to the actual script
 # Save RDS object of tree
 # Add PTATO filtering
-
+# Can we create branch specific VCF files from CellPhy? 
 
 

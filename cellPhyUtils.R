@@ -224,12 +224,11 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
       }
     }
     
-    
     # check if "OUTGROUP" branch mutations are correct, or belong to the other branch
     outgr_branch = which(sapply(tree@data$samples, function(s) { all(strsplit(s, "\\|")[[1]] == outgr) }))
     tree = root_tree(tree, outgr, add_info = TRUE)
     
-    # First select the samples, then do the split 
+    # First select the samples, then do the split
     normal_muts = strsplit(tree@data$mutation_names, "\\|")[[outgr_branch]]
     print("Did it pass my error?")
     if (length(normal_muts) > 0) {
