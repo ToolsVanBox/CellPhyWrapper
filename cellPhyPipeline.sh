@@ -9,7 +9,7 @@ ERROR="true"
 MODEL="GT16+FO"
 INPUTTYPE="GL"
 THREADS=8
-OUTPUTDIR=$(pwd) # CHECK IF THIS WORKS
+OUTPUTDIR=$(pwd)
 SEED=2
 NBOOTSTRAP=100
 CELLPHY=/hpc/pmc_vanboxtel/tools/external/cellphy/cellphy.sh
@@ -35,7 +35,6 @@ fi
 
 # Load module since R is not standard available on the HPC
 module load R/4.3.0
-#module load R/4.1.2
 
 # user message ---------------
 usage_msg="Usage: Cellphy Wrapper
@@ -52,6 +51,7 @@ Optional parameters:
         --outputdir: output directory, if not current ($OUTPUTDIR)
         --seed: seed to start from ($SEED)
         --nbootstrap: number of bootstraps ($NBOOTSTRAP)
+        --prefix: a prefix for naming output names. If no prefix is provided, the vcf name will be taken
         --help: print this message
 "
 usage() {
@@ -179,11 +179,7 @@ Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGR
 
 
 
-# Fix prefix, wrong place, wrong substitution 
-#       - Check if it can handle .vcf.gz
-# Can it handle PTATO vcf? 
-# Can it handle IAP vcf? 
-# Give it more cores
+
 
 
 
