@@ -63,7 +63,7 @@ cell_phy_tree <- load_tree_with_info(
   ptato_grl = ptato_grl, 
   cellphy_rm_non1 = TRUE,
   mutation_soure = 'cellphy', 
-  norm_pres_max = 0.95,  high_frac_min = 0.05, min_frac_all = 0.5
+  norm_pres_max = 0.95,  high_frac_min = 0.05, min_frac_all = 0.1
 )
 
 # plot the tree
