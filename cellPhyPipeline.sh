@@ -176,11 +176,8 @@ Rscript ${SUPPORT_MAP} ${PREFIX}.Support.raxml.support ${OUTGROUP}
 Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP
 
 
-
-
-
-
-
+# Create upset plot ---------------
+Rscript --vanilla ${SOURCE}/Upsetplot.R $INPUT $OUTPUTDIR ${PREFIX}
 
 
 
