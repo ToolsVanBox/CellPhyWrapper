@@ -231,7 +231,6 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
     
     # First select the samples, then do the split
     normal_muts = strsplit(tree@data$mutation_names, "\\|")[[outgr_branch]]
-    print("Did it pass my error?")
     if (length(normal_muts) > 0) {
       vcf_names = gsub("_.*", "", names(vcf))
       normal_vcf = vcf[vcf_names %in% normal_muts]
@@ -282,6 +281,13 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
         tree@data$mutation_names[which(tree@data$node_id == br_name)] = paste(gsub("_.*", "", names(vcf))[sc_muts][!remove_single_muts], collapse = "|")
       }
     }
+    # Plot the duplicates before removing endbranch mutations 
+    preRmEndMut <- ggplot(data=as.data.frame(strsplit(tree@data$mutation_names, '\\|') %>% unlist %>% table %>% table), 
+           aes(x=., y=Freq)) + geom_bar(stat="identity") + 
+      geom_text(aes(label=Freq), position=position_dodge(width=0.9), vjust=-0.25) + 
+      ggtitle("Number of occurences of mutations") + 
+      theme_bw()
+    ggsave(filename = paste0(dir, "preRmEndMut.pdf"), plot = preRmEndMut)
     
     # remove endbranch mutations that are found in more than 1 sample
     if (cellphy_rm_non1) {
@@ -306,6 +312,14 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
         }
       }
     }
+    # Rename the branch lengths to avoid the duplicated mutations 
+    tree@data$branch_length = lengths(strsplit(tree@data$mutation_names, '\\|'))
+    postRmEndMut <- ggplot(data=as.data.frame(strsplit(tree@data$mutation_names, '\\|') %>% unlist %>% table %>% table), 
+                           aes(x=., y=Freq)) + geom_bar(stat="identity") + 
+      geom_text(aes(label=Freq), position=position_dodge(width=0.9), vjust=-0.25) + 
+      ggtitle("Number of occurences of mutations") + 
+      theme_bw()
+    ggsave(filename = paste0(dir, "postRmEndMut.pdf"), plot = postRmEndMut)
     return(tree)
   } else if (mutation_soure == 'simple' & !is.null(vcf)) {
     # do the same for the "fitting" mutations
