@@ -287,7 +287,7 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
       geom_text(aes(label=Freq), position=position_dodge(width=0.9), vjust=-0.25) + 
       ggtitle("Number of occurences of mutations") + 
       theme_bw()
-    ggsave(filename = paste0(dir, "preRmEndMut.pdf"), plot = preRmEndMut)
+    ggsave(filename = paste0(dir, "/preRmEndMut.pdf"), plot = preRmEndMut)
     
     # remove endbranch mutations that are found in more than 1 sample
     if (cellphy_rm_non1) {
@@ -319,7 +319,7 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
       geom_text(aes(label=Freq), position=position_dodge(width=0.9), vjust=-0.25) + 
       ggtitle("Number of occurences of mutations") + 
       theme_bw()
-    ggsave(filename = paste0(dir, "postRmEndMut.pdf"), plot = postRmEndMut)
+    ggsave(filename = paste0(dir, "/postRmEndMut.pdf"), plot = postRmEndMut)
     return(tree)
   } else if (mutation_soure == 'simple' & !is.null(vcf)) {
     # do the same for the "fitting" mutations
