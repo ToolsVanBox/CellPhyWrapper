@@ -138,7 +138,7 @@ if [[ $ERROR == "true" ]]; then
 fi
 if [[ $OUTGROUP == "NONE" ]]; then
 	echo "please define an outgroup using --outgr"
-	exit
+	#exit
 fi
 
 # Create prefix if no prefix is given
