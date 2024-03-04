@@ -16,7 +16,6 @@ prefix = args[3]
 
 ### Read file 
 myvcf <- readVcf(vcf_file)
-#rownames(myvcf) <- paste(as.character(seqnames(myvcf)),start(myvcf),sep=":")
 
 ### Fix the haplotypes in binairy fashion 
 myvcf_gt_df <- as.data.frame(geno(myvcf)$GT)  
@@ -38,10 +37,10 @@ upset_matrix <- upset_matrix_raw[which(rowSums(upset_matrix_raw) > 1),]
 
 ### Plot figures 
 pdf(paste0(outputdir, "/", prefix, "_all_upset.pdf"), onefile=FALSE)
-upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq")
+upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T, sets = colnames(upset_matrix_raw))
 dev.off()
 pdf(paste0(outputdir, "/", prefix, "_shared_upset.pdf"), onefile=FALSE)
-upset(as.data.frame(upset_matrix),nsets=ncol(upset_matrix), order.by = "freq")
+upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T, sets = colnames(upset_matrix_raw))
 dev.off()
 
 
