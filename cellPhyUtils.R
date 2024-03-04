@@ -9,7 +9,6 @@ read_ggtree <- function(file) {
   tree_text = readLines(file)
   tree_text = gsub('(:[0-9\\.eE\\+\\-]+)\\[(\\d+)\\]', '\\1\\[&&NHX:N=\\2\\]', tree_text)
   tree_text = gsub(';', '\\[&&NHX:N=-1\\];', tree_text)
-  # print(tree_text)
   tree = treeio::read.nhx(textConnection(tree_text))
   return(tree)
 }
@@ -226,39 +225,44 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
     }
     
     # check if "OUTGROUP" branch mutations are correct, or belong to the other branch
-    outgr_branch = which(sapply(tree@data$samples, function(s) { all(strsplit(s, "\\|")[[1]] == outgr) }))
-    tree = root_tree(tree, outgr, add_info = TRUE)
-    
-    # First select the samples, then do the split
-    normal_muts = strsplit(tree@data$mutation_names, "\\|")[[outgr_branch]]
-    if (length(normal_muts) > 0) {
-      vcf_names = gsub("_.*", "", names(vcf))
-      normal_vcf = vcf[vcf_names %in% normal_muts]
+    if (outgr != "NONE"){
+      outgr_branch = which(sapply(tree@data$samples, function(s) { all(strsplit(s, "\\|")[[1]] == outgr) }))
+      tree = root_tree(tree, outgr, add_info = TRUE)
       
-      # extract VAF and calculate how frequent in outgroup
-      vafs = normal_vcf@assays@data$VAF %>% apply(2, unlist)
-      vafs[is.na(vafs)] = 0
-      if (is.null(dim(vafs))) { vafs = matrix(vafs, nrow = 1) }
-      colnames(vafs) = samples(header(vcf))
-      normal_pres_frac = sum(vafs[ ,outgr] > 0)/nrow(vafs)
-      n_samp = rowSums(vafs > 0)
-      high_samp_frac = sum(n_samp > 2 & vafs[ ,outgr] == 0)/nrow(vafs)
-      other_vaf = vafs[ ,setdiff(colnames(vafs), outgr), drop = FALSE]
-      n_others = rowSums(other_vaf > 0)
-      frac_all_others = sum(n_others == ncol(other_vaf))/nrow(vafs)
-      other_branch = which(sapply(strsplit(tree@data$samples, '\\|'), function(s) all(colnames(other_vaf) %in% s)))
-      
-      if (high_samp_frac > high_frac_min && normal_pres_frac < norm_pres_max && frac_all_others > min_frac_all) {
-        message("moving mutations from outgroup to main branch")
-        message("this often happens when all cells in the sample share mutations")
-        message(format(normal_pres_frac * 100, digits = 5), "% of muts were found in outgroup")
-        message(format(high_samp_frac * 100, digits = 5), "% of muts were in more than two mutations other than the outgroup")
-        message("on average found in ", format(mean(n_others), digits = 2), " out of ", ncol(other_vaf), " other samples")
-        tree@data$mutation_names[other_branch] = tree@data$mutation_names[outgr_branch]
-        tree@data$branch_length[other_branch] = tree@data$branch_length[outgr_branch]
-        tree@data$mutation_names[outgr_branch] = NA
-        tree@data$branch_length[outgr_branch] = 0
+      # First select the samples, then do the split
+      normal_muts = strsplit(tree@data$mutation_names, "\\|")[[outgr_branch]]
+      if (length(normal_muts) > 0) {
+        vcf_names = gsub("_.*", "", names(vcf))
+        normal_vcf = vcf[vcf_names %in% normal_muts]
+        
+        # extract VAF and calculate how frequent in outgroup
+        vafs = normal_vcf@assays@data$VAF %>% apply(2, unlist)
+        vafs[is.na(vafs)] = 0
+        if (is.null(dim(vafs))) { vafs = matrix(vafs, nrow = 1) }
+        colnames(vafs) = samples(header(vcf))
+        normal_pres_frac = sum(vafs[ ,outgr] > 0)/nrow(vafs)
+        n_samp = rowSums(vafs > 0)
+        high_samp_frac = sum(n_samp > 2 & vafs[ ,outgr] == 0)/nrow(vafs)
+        other_vaf = vafs[ ,setdiff(colnames(vafs), outgr), drop = FALSE]
+        n_others = rowSums(other_vaf > 0)
+        frac_all_others = sum(n_others == ncol(other_vaf))/nrow(vafs)
+        other_branch = which(sapply(strsplit(tree@data$samples, '\\|'), function(s) all(colnames(other_vaf) %in% s)))
+        
+        print("Counts in other cells")
+        if (high_samp_frac > high_frac_min && normal_pres_frac < norm_pres_max && frac_all_others > min_frac_all) {
+          message("moving mutations from outgroup to main branch")
+          message("this often happens when all cells in the sample share mutations")
+          message(format(normal_pres_frac * 100, digits = 5), "% of muts were found in outgroup")
+          message(format(high_samp_frac * 100, digits = 5), "% of muts were in more than two mutations other than the outgroup")
+          message("on average found in ", format(mean(n_others), digits = 2), " out of ", ncol(other_vaf), " other samples")
+          tree@data$mutation_names[other_branch] = tree@data$mutation_names[outgr_branch]
+          tree@data$branch_length[other_branch] = tree@data$branch_length[outgr_branch]
+          tree@data$mutation_names[outgr_branch] = NA
+          tree@data$branch_length[outgr_branch] = 0
+        }
       }
+    }else{
+      tree = root_tree(tree, outgr, add_info = TRUE)
     }
     
     # filter PTATO if present
