@@ -13,6 +13,7 @@ args = commandArgs(trailingOnly = TRUE)
 vcf_file = args[1]
 outputdir = args[2]
 prefix = args[3]
+outgroup = args[4]
 
 ### Read file 
 myvcf <- readVcf(vcf_file)
@@ -37,10 +38,12 @@ upset_matrix <- upset_matrix_raw[which(rowSums(upset_matrix_raw) > 1),]
 
 ### Plot figures 
 pdf(paste0(outputdir, "/", prefix, "_all_upset.pdf"), onefile=FALSE)
-upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T, sets = colnames(upset_matrix_raw))
+upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T, 
+      sets = colnames(upset_matrix_raw[,!colnames(upset_matrix_raw) %in% c(outgroup)]))
 dev.off()
 pdf(paste0(outputdir, "/", prefix, "_shared_upset.pdf"), onefile=FALSE)
-upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T, sets = colnames(upset_matrix_raw))
+upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T, 
+      sets = colnames(upset_matrix_raw[,!colnames(upset_matrix_raw) %in% c(outgroup)]))
 dev.off()
 
 

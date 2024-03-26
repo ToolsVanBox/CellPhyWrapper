@@ -177,7 +177,7 @@ Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGR
 
 
 # Create upset plot ---------------
-Rscript --vanilla ${SOURCE}/Upsetplot.R $INPUT $OUTPUTDIR ${PREFIX}
+Rscript --vanilla ${SOURCE}/Upsetplot.R $INPUT $OUTPUTDIR ${PREFIX} $OUTGROUP
 
 
 
