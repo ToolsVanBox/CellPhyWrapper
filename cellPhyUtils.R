@@ -174,11 +174,116 @@ assign_muts_to_branches_simple <- function(vcf, tree, add1missing = TRUE, ptato_
   }
 }
 
+# in a percentage way, assign mutations to branches (do all expected cells have it, and none of the others? assign when x percent of branch have the mutation) ------------------
+assign_muts_to_branches_percentage <- function(vcf, tree, add1missing = TRUE, ptato_grl = NA, percent = 0.4) {
+  # get mutation VAF
+  vcf_names = gsub("_.*", "", names(vcf))
+  vaf_all = vcf@assays@data$VAF %>% apply(2, unlist)
+  vaf_all[is.na(vaf_all)] = 0
+  colnames(vaf_all) = samples(header(vcf))
+  
+  # make tree table -> above 0 = present
+  tt = lapply(colnames(vaf_all), function(cn) {
+    ifelse(vaf_all[ ,cn] > 0, 1, 0)
+  }) %>% do.call(cbind, .) %>% `colnames<-`(colnames(vaf_all))
+  tt = tt[ ,tree@phylo$tip.label]
+  
+  # assign mutations that fit exactly to each branch
+  dsct = sapply(tree@data$samples, function(label) {
+    samples = strsplit(label, "\\|")[[1]]
+    ifelse(colnames(tt) %in% samples, 1, 0)
+  }) %>% 
+    t %>%
+    `colnames<-`(colnames(tt)) %>%
+    `rownames<-`(tree@data$node_id)
+  wbranch <- apply(tt, 1, function(trow) {
+    same_bool = apply(dsct, 1, function(drow) {
+      all.equal(trow, drow) == TRUE
+    })
+    rownames(dsct)[same_bool]
+  })
+  
+  # include if can be fitted to a single branch if assuming that 1 is missing
+  if (add1missing) {
+    wbranchmiss <- apply(tt, 1, function(t_numb) {
+      onemissedfit = apply(dsct, 1, function(d_numb) {
+        # Get the number of missed samples (ms) allowed per branch
+        ms <- floor(0.5 + sum(d_numb)*percent)
+        if (ms < 1){
+          if (sum(d_numb) <= 2){
+            ms = 0
+          }else{
+            ms = 1
+          }
+        }
+        sum(t_numb) >= (sum(d_numb) - ms) &
+          sum(t_numb) <= (sum(d_numb) ) &
+          length(setdiff(names(t_numb)[t_numb == 0], names(d_numb)[d_numb == 0])) <= ms &
+          length(intersect(names(t_numb)[t_numb == 1], names(d_numb)[d_numb == 1])) >= (sum(d_numb) - ms) &
+          length(which(!names(t_numb)[t_numb == 1]  %in% names(d_numb)[d_numb == 1] )) == 0 
+      })
+      # Assign the number of missing samples to the name of the branch
+      rownames(dsct)[onemissedfit]
+    })
+  }
+  
+  ### If mutation can be allocated to multiple branches pick the branch with the least difference
+  filter_r <- NULL
+  diff_num <- 100
+  for (i in 1:length(wbranchmiss)){
+    filter_r <- NULL
+    diff_num <- 100 # Check if it works on inf
+    t_numb = tt[i,]
+    
+    for (r in wbranchmiss[[i]]){
+      if ( abs(sum(t_numb) - sum(dsct[r,])) < diff_num){
+        diff_num <- abs(sum(t_numb) - sum(dsct[r,]))
+        filter_r <- r
+      }
+    }
+    # Check if new branch can be allocated
+    if (is.null(filter_r)){
+      wbranchmiss[[i]] <- wbranch[[i]]
+    }else{
+      wbranchmiss[[i]] <- filter_r
+    }
+  }
+  wbranch[lengths(wbranch) == 0 & lengths(wbranchmiss) == 1] = unlist(wbranchmiss[lengths(wbranch) == 0 & lengths(wbranchmiss) == 1])
+  
+  # label non-hits and return
+  for (n in which(lengths(wbranch) == 0)) { wbranch[[n]] = "NOBRANCH" }
+  wbranch = unlist(wbranch)
+  message('keeping ', sum(wbranch != "NOBRANCH"), ' from ', length(wbranch), ' mutations that fit the tree')
+  
+  if (length(ptato_grl) == 1 && is.na(ptato_grl)) {
+    return(wbranch)
+  } else {
+    # filter PTATO if present
+    n1_samps = setNames(tree@data$node_id, tree@data$tip.label)
+    n1_samps = n1_samps[!is.na(names(n1_samps))]
+    n1_samps = grep("n1", n1_samps, value = T)
+    n1_samps = n1_samps[grepl("PTA", names(n1_samps))]
+    
+    for (br_name in n1_samps) {
+      pta_samp = names(n1_samps)[n1_samps == br_name]
+      sc_muts = which(wbranch == br_name) # single cell
+      sc_gr = granges(vcf[sc_muts])
+      seqlevels(sc_gr) = paste0('chr', seqlevels(sc_gr))
+      ptato_gr = ptato_grl[[pta_samp]]
+      which_muts_keep = queryHits(findOverlaps(sc_gr, ptato_gr)) %>% unique %>% sort
+      remove_single_muts = !seq(length(sc_gr)) %in% which_muts_keep
+      message('filtering out ', sum(remove_single_muts), ' of ', length(remove_single_muts), ' non-PTATO muts from ', pta_samp)
+      wbranch[sc_muts][remove_single_muts] = "NOBRANCH"
+    }
+    return(wbranch)
+  }
+}
+
 # load_tree_with_support --------------------------------------------
 load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL, 
                                mutation_soure = 'cellphy', 
                                vcf = NULL, ptato_grl = NA, cellphy_rm_non1 = TRUE,
-                               norm_pres_max = 0.95,  high_frac_min = 0.05, min_frac_all = 0.5) {
+                               norm_pres_max = 0.95,  high_frac_min = 0.05, min_frac_all = 0.5, percent = 0.4) {
   # define the input files
   if (is.null(prefix)) {
     files = list.files(dir)
@@ -330,6 +435,16 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
     message('VAF method selected')
     tree = root_tree(tree, outgr, add_info = TRUE)
     wbranch = assign_muts_to_branches_simple(vcf, tree, ptato_grl = ptato_grl)
+    vcf_names = gsub("_.*", "", names(vcf))
+    tree@data$mutation_names = sapply(tree@data$node_id, function(n_node) {
+      paste(vcf_names[wbranch == n_node], collapse =  "|")
+    })
+    tree@data$branch_length = lengths(strsplit(tree@data$mutation_names, "\\|"))
+  } else if (mutation_soure == 'percentage' & !is.null(vcf)) {
+    # do the same for the "fitting" mutations
+    message('VAF method selected')
+    tree = root_tree(tree, outgr, add_info = TRUE)
+    wbranch = assign_muts_to_branches_percentage(vcf, tree, ptato_grl = ptato_grl, percent = percent)
     vcf_names = gsub("_.*", "", names(vcf))
     tree@data$mutation_names = sapply(tree@data$node_id, function(n_node) {
       paste(vcf_names[wbranch == n_node], collapse =  "|")

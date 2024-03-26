@@ -41,7 +41,6 @@ seqlevels(vcf, pruning.mode = 'tidy') = c(1:22, "X", "Y")
 print(paste("This is outgroup: ", outgroup))
 # If no VAF column is present create one 
 if (is.null(geno(vcf)$VAF)){
-  print("Empty VAF")
   mydf <- data.frame(matrix(NA, nrow = nrow(vcf)))
   # Calculate VAF per sample 
   for (sname in samples(header(vcf))) {
@@ -56,8 +55,6 @@ if (is.null(geno(vcf)$VAF)){
   geno(vcf)$VAF <- mydf
 }
 
-
-
 # load the tree, all annotations (muts, boots), and filter end-branches
 cell_phy_tree_NoRm <- load_tree_with_info(
   dir = cellphydir,
@@ -66,11 +63,11 @@ cell_phy_tree_NoRm <- load_tree_with_info(
   ptato_grl = ptato_grl, 
   cellphy_rm_non1 = FALSE,
   mutation_soure = 'cellphy', 
-  norm_pres_max = 0.95,  high_frac_min = 0.05, min_frac_all = 0.1#0.1
+  norm_pres_max = 0.95,  high_frac_min = 0.05, min_frac_all = 0.1
 )
 
 # plot the tree
-tree_plot_NoRm = ggtree(cell_phy_tree_NoRm, branch.length = 'branch_length') + #, aes(color = group)) +
+tree_plot_NoRm = ggtree(cell_phy_tree_NoRm, branch.length = 'branch_length') + 
   geom_nodelab(aes(label = n_boot), geom = 'label', color = 'grey50', fill = rgb(1,1,1,0.7), size = 2) +
   geom_text(aes(x = branch, label = branch_length), color = 'black', nudge_y = -0.5, nudge_x = 1) +
   geom_tiplab(size=3) + 
@@ -81,8 +78,6 @@ ggsave(plot = tree_plot_NoRm, filename = paste0(cellphydir, "/CellPhyWrapperTree
        width = 10, height = 7)
 
 saveRDS(cell_phy_tree_NoRm, file = paste0(cellphydir, "/TreeObject_NoRm.RDS"))
-
-
 
 
 # load the tree, all annotations (muts, boots), and filter end-branches
@@ -97,7 +92,7 @@ cell_phy_tree <- load_tree_with_info(
 )
 
 # plot the tree
-tree_plot = ggtree(cell_phy_tree, branch.length = 'branch_length') + #, aes(color = group)) +
+tree_plot = ggtree(cell_phy_tree, branch.length = 'branch_length') + 
   geom_nodelab(aes(label = n_boot), geom = 'label', color = 'grey50', fill = rgb(1,1,1,0.7), size = 2) +
   geom_text(aes(x = branch, label = branch_length), color = 'black', nudge_y = -0.5, nudge_x = 1) +
   geom_tiplab(size=3) + 
@@ -114,13 +109,6 @@ saveRDS(cell_phy_tree, file = paste0(cellphydir, "/TreeObject.RDS"))
 
 
 
-### HERE POSSIBLY CODE WITH REFITTING STANDARD COSMIC SIGNATURES TO BRANCHES
 
-
-#### ToDo for monday: 
-# Add your changed to the actual script
-# Save RDS object of tree
-# Add PTATO filtering
-# Can we create branch specific VCF files from CellPhy? 
 
 
