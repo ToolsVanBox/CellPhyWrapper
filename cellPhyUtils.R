@@ -442,7 +442,7 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
     tree@data$branch_length = lengths(strsplit(tree@data$mutation_names, "\\|"))
   } else if (mutation_soure == 'percentage' & !is.null(vcf)) {
     # do the same for the "fitting" mutations
-    message('VAF method selected')
+    message('Percentage method selected')
     tree = root_tree(tree, outgr, add_info = TRUE)
     wbranch = assign_muts_to_branches_percentage(vcf, tree, ptato_grl = ptato_grl, percent = percent)
     vcf_names = gsub("_.*", "", names(vcf))

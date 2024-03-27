@@ -53,6 +53,7 @@ Optional parameters:
         --nbootstrap: number of bootstraps ($NBOOTSTRAP)
         --prefix: a prefix for naming output names. If no prefix is provided, the vcf name will be taken
         --percentage: a percentage of cells that can be missed in a specific branch
+        --plottingonly: Whether only the plotting part needs to be rerun (TRUE/FALSE)
         --help: print this message
 "
 usage() {
@@ -118,6 +119,10 @@ while [[ $# -gt 0 ]]; do
                         PERCENT="$2"
                         shift 2
                         ;;
+                --plottingonly)
+                        PLOTONLY="$2"
+                        shift 2
+                        ;;
                 --help)
                         usage
                         exit
@@ -151,12 +156,14 @@ if [ -z "$PREFIX" ] ; then
         PREFIX=${INPUT/%.vcf/}
         PREFIX=$(basename ${PREFIX})
 fi
-
 # Create percentage if no percentage is given
 if [ -z "$PERCENT" ] ; then 
         PERCENT=0.4
 fi
-
+# Create percentage if no percentage is given
+if [ -z "$PLOTONLY" ] ; then 
+        PLOTONLY=FALSE
+fi
 
 # process the input variables ---------------
 # build the command to build the tree: add "prob-msa off" when cellphy should be run on GT instead of the default PL
@@ -168,18 +175,20 @@ fi
 
 cd $OUTPUTDIR
 
-# run cellphy ---------------
-# find the best tree
-eval "$TREE_COMM"
-# do bootstrapping to determine confidence
-bash ${CELLPHY} RAXML --bootstrap --msa ${INPUT} --model ${MODEL} --seed ${SEED} --threads ${THREADS} --bs-trees ${NBOOTSTRAP} --prefix ${PREFIX}.Boot
-# summarize bootstrap results
-bash ${CELLPHY} RAXML --support -tree ${PREFIX}.Tree.raxml.bestTree --bs-trees ${PREFIX}.Boot.raxml.bootstraps --prefix ${PREFIX}.Support --threads ${THREADS} --redo
-# map mutations to the tree
-bash ${CELLPHY} RAXML --mutmap --msa ${INPUT} --msa-format VCF -model ${PREFIX}.Tree.raxml.bestModel -tree ${PREFIX}.Tree.raxml.bestTree --prefix ${PREFIX}.Support --threads ${THREADS} --opt-branches off
+if [ $PLOTONLY == FALSE ]; then
+        # run cellphy ---------------
+        # find the best tree
+        eval "$TREE_COMM"
+        # do bootstrapping to determine confidence
+        bash ${CELLPHY} RAXML --bootstrap --msa ${INPUT} --model ${MODEL} --seed ${SEED} --threads ${THREADS} --bs-trees ${NBOOTSTRAP} --prefix ${PREFIX}.Boot
+        # summarize bootstrap results
+        bash ${CELLPHY} RAXML --support -tree ${PREFIX}.Tree.raxml.bestTree --bs-trees ${PREFIX}.Boot.raxml.bootstraps --prefix ${PREFIX}.Support --threads ${THREADS} --redo
+        # map mutations to the tree
+        bash ${CELLPHY} RAXML --mutmap --msa ${INPUT} --msa-format VCF -model ${PREFIX}.Tree.raxml.bestModel -tree ${PREFIX}.Tree.raxml.bestTree --prefix ${PREFIX}.Support --threads ${THREADS} --opt-branches off
 
-# Default cellphy tree  
-Rscript ${SUPPORT_MAP} ${PREFIX}.Support.raxml.support ${OUTGROUP}
+        # Default cellphy tree  
+        Rscript ${SUPPORT_MAP} ${PREFIX}.Support.raxml.support ${OUTGROUP}
+fi
 
 
 

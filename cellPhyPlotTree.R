@@ -85,10 +85,10 @@ tree_plot = ggtree(cell_phy_tree, branch.length = 'branch_length') +
   coord_cartesian(clip = 'off') +
   theme(plot.margin = unit(c(10,100,10,10), 'points'))
 
-ggsave(plot = tree_plot, filename = paste0(cellphydir, "/CellPhyWrapperTree.pdf"), 
+ggsave(plot = tree_plot, filename = paste0(cellphydir, "/CPW_Tree_", as.character(percent),".pdf"), 
        width = 10, height = 7)
 
-saveRDS(cell_phy_tree, file = paste0(cellphydir, "/TreeObject.RDS"))
+saveRDS(cell_phy_tree, file = paste0(cellphydir, "/TreeObject", as.character(percent),".RDS"))
 
 
 
