@@ -7,6 +7,7 @@ options(stringsAsFactors = FALSE)
 ### Load libraries
 library(VariantAnnotation)
 library(UpSetR)
+library(dplyr)
 
 ### get command arguments
 args = commandArgs(trailingOnly = TRUE)
@@ -16,7 +17,7 @@ prefix = args[3]
 outgroup = args[4]
 
 ### Read file and add VAF if needed
-myvcf <- readVcf(vcf_file)
+vcf <- readVcf(vcf_file)
 # If no VAF column is present create one 
 if (is.null(geno(vcf)$VAF)){
   mydf <- data.frame(matrix(NA, nrow = nrow(vcf)))
