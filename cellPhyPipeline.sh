@@ -52,6 +52,7 @@ Optional parameters:
         --seed: seed to start from ($SEED)
         --nbootstrap: number of bootstraps ($NBOOTSTRAP)
         --prefix: a prefix for naming output names. If no prefix is provided, the vcf name will be taken
+        --percentage: a percentage of cells that can be missed in a specific branch
         --help: print this message
 "
 usage() {
@@ -113,6 +114,10 @@ while [[ $# -gt 0 ]]; do
                         PREFIX="$2"
                         shift 2
                         ;;
+                --percentage)
+                        PERCENT="$2"
+                        shift 2
+                        ;;
                 --help)
                         usage
                         exit
@@ -147,6 +152,12 @@ if [ -z "$PREFIX" ] ; then
         PREFIX=$(basename ${PREFIX})
 fi
 
+# Create percentage if no percentage is given
+if [ -z "$PERCENT" ] ; then 
+        PERCENT=0.4
+fi
+
+
 # process the input variables ---------------
 # build the command to build the tree: add "prob-msa off" when cellphy should be run on GT instead of the default PL
 TREE_COMM="bash ${CELLPHY} RAXML --msa ${INPUT} --msa-format VCF --model ${MODEL} --seed ${SEED} --threads ${THREADS} --prefix ${PREFIX}.Tree"
@@ -173,7 +184,7 @@ Rscript ${SUPPORT_MAP} ${PREFIX}.Support.raxml.support ${OUTGROUP}
 
 
 # make the tree in R ---------------
-Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP
+Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP $PERCENT
 
 
 # Create upset plot ---------------
