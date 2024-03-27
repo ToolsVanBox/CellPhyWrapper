@@ -15,25 +15,35 @@ outputdir = args[2]
 prefix = args[3]
 outgroup = args[4]
 
-### Read file 
+### Read file and add VAF if needed
 myvcf <- readVcf(vcf_file)
+# If no VAF column is present create one 
+if (is.null(geno(vcf)$VAF)){
+  mydf <- data.frame(matrix(NA, nrow = nrow(vcf)))
+  # Calculate VAF per sample 
+  for (sname in samples(header(vcf))) {
+    ad <- sapply(geno(vcf)$AD[,sname],"[[",2)
+    dp <- geno(vcf)$DP[,sname]
+    VAF <- ad/dp
+    mydf[[sname]] <- as.numeric(VAF)
+  }
+  # Add VAF to vcf
+  mydf <- mydf[-1]
+  geno(header(vcf))["VAF",] = list("1","Float","Varient Allele Frequency")
+  geno(vcf)$VAF <- mydf
+}
 
-### Fix the haplotypes in binairy fashion 
-myvcf_gt_df <- as.data.frame(geno(myvcf)$GT)  
-myvcf_gt_df[is.na(myvcf_gt_df)] <- 0
-myvcf_gt_df[myvcf_gt_df == '0/0'] <- 0
-myvcf_gt_df[myvcf_gt_df == '0|0'] <- 0
-myvcf_gt_df[myvcf_gt_df == './.'] <- 0
-myvcf_gt_df[myvcf_gt_df == '.|.'] <- 0
-myvcf_gt_df[myvcf_gt_df == '0/1'] <- 1
-myvcf_gt_df[myvcf_gt_df == '0|1'] <- 1
-myvcf_gt_df[myvcf_gt_df == '1/1'] <- 1
-myvcf_gt_df[myvcf_gt_df == '1|1'] <- 1
-
-### Get upset matrix 
-upset_matrix_raw <- matrix(as.numeric(unlist(myvcf_gt_df)),ncol=ncol(myvcf_gt_df))
-rownames(upset_matrix_raw) <- rownames(myvcf_gt_df)
-colnames(upset_matrix_raw) <- colnames(myvcf_gt_df)
+### get mutation VAF
+vcf_names = gsub("_.*", "", names(vcf))
+vaf_all = vcf@assays@data$VAF %>% apply(2, unlist)
+vaf_all[is.na(vaf_all)] = 0
+colnames(vaf_all) = samples(header(vcf))
+### Create an upset matrix based upon vaf. 
+# Vaf > 0 = present
+upset_matrix_raw = lapply(colnames(vaf_all), function(cn) {
+  ifelse(vaf_all[ ,cn] > 0, 1, 0)
+}) %>% do.call(cbind, .) %>% `colnames<-`(colnames(vaf_all))
+rownames(upset_matrix_raw) <- rownames(vcf)
 upset_matrix <- upset_matrix_raw[which(rowSums(upset_matrix_raw) > 1),]
 
 ### Plot figures 
