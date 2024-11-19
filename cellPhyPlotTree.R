@@ -27,6 +27,7 @@ vcf_file = args[2]
 ptato_dir = args[3]
 outgroup = args[4]
 percent = args[5]
+prefix=args[6]
 
 # read in the PTATO VCFs
 if (ptato_dir != "NONE") {
@@ -74,7 +75,8 @@ cell_phy_tree <- load_tree_with_info(
   norm_pres_max = 0.95, 
   high_frac_min = 0.05, 
   min_frac_all = 0.1, 
-  percent = percent
+  percent = percent,
+  prefix = prefix
 )
 
 # plot the tree

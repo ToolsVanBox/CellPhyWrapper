@@ -193,7 +193,7 @@ fi
 
 
 # make the tree in R ---------------
-Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP $PERCENT
+Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP $PERCENT ${PREFIX}
 
 
 # Create upset plot ---------------
