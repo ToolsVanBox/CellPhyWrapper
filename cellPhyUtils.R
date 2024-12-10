@@ -288,11 +288,11 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
   if (is.null(prefix)) {
     files = list.files(dir)
     starttree = grep(".Tree.raxml.startTree", files, value = T)
-    prefix = gsub("Tree.raxml.startTree", "", starttree)
+    prefix = gsub(".Tree.raxml.startTree", "", starttree)
   }
-  treef = paste0(dir, '/', prefix, 'Support.raxml.mutationMapTree')
-  trees = paste0(dir, '/', prefix, 'Support.raxml.support')
-  mutf = paste0(dir, '/', prefix, 'Support.raxml.mutationMapList')
+  treef = paste0(dir, '/', prefix, '.Support.raxml.mutationMapTree')
+  trees = paste0(dir, '/', prefix, '.Support.raxml.support')
+  mutf = paste0(dir, '/', prefix, '.Support.raxml.mutationMapList')
   
   # load tree
   message('reading and processing tree...')
