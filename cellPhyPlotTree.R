@@ -14,11 +14,13 @@ sourcedir <- .getSourceDir()
 print(sourcedir)
 
 # Load libraries
-source(paste(sourcedir, "/cellPhyUtils.R",sep=""), chdir = T)
-library(BSgenome.Hsapiens.NCBI.GRCh38)
-library(VariantAnnotation)
-ref_genome <- "BSgenome.Hsapiens.NCBI.GRCh38"
-library(ref_genome, character.only = TRUE)
+suppressPackageStartupMessages({
+  source(paste(sourcedir, "/cellPhyUtils.R",sep=""), chdir = T)
+  library(BSgenome.Hsapiens.NCBI.GRCh38)
+  library(VariantAnnotation)
+  ref_genome <- "BSgenome.Hsapiens.NCBI.GRCh38"
+  library(ref_genome, character.only = TRUE)
+})
 
 # get command arguments
 args = commandArgs(trailingOnly = TRUE)
