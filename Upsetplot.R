@@ -5,9 +5,11 @@ rm(list=ls(all=TRUE))
 options(stringsAsFactors = FALSE)
 
 ### Load libraries
-library(VariantAnnotation)
-library(UpSetR)
-library(dplyr)
+suppressPackageStartupMessages({
+  library(VariantAnnotation)
+  library(UpSetR)
+  library(dplyr)
+})
 
 ### get command arguments
 args = commandArgs(trailingOnly = TRUE)
@@ -47,16 +49,19 @@ upset_matrix_raw = lapply(colnames(vaf_all), function(cn) {
 rownames(upset_matrix_raw) <- rownames(vcf)
 upset_matrix <- upset_matrix_raw[which(rowSums(upset_matrix_raw) > 1),]
 
-### Plot figures 
+### Plot figures
+# All mutations
 pdf(paste0(outputdir, "/", prefix, "_all_upset.pdf"), onefile=FALSE)
-upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T, 
+upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T,
       sets = colnames(upset_matrix_raw[,!colnames(upset_matrix_raw) %in% c(outgroup)]))
 dev.off()
+# Shared mutations
 pdf(paste0(outputdir, "/", prefix, "_shared_upset.pdf"), onefile=FALSE)
-upset(as.data.frame(upset_matrix_raw),nsets=ncol(upset_matrix_raw), order.by = "freq", keep.order = T, 
-      sets = colnames(upset_matrix_raw[,!colnames(upset_matrix_raw) %in% c(outgroup)]))
+upset_matrix_raw_shared <- as.data.frame(upset_matrix_raw)
+upset_matrix_raw_shared <- upset_matrix_raw_shared[which(rowSums(upset_matrix_raw_shared) > 1), ]
+upset(upset_matrix_raw_shared, nsets=ncol(upset_matrix_raw_shared), order.by = "freq", keep.order = T,
+      sets = colnames(upset_matrix_raw_shared[,!colnames(upset_matrix_raw_shared) %in% c(outgroup)]))
 dev.off()
-
 
 
 
