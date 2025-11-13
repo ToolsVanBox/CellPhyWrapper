@@ -105,6 +105,12 @@ check_label_or_add <- function(df, subnode, Env) {
 
 # in the most simple way, assign mutations to branches (do all expected cells have it, and none of the others?) ------------------
 assign_muts_to_branches_simple <- function(vcf, tree, add1missing = TRUE, ptato_grl = NA) {
+  # File to catch filter message 
+  output_file <- paste0(cellphydir, "/Filter_muts_", as.character(percent),".txt")
+  # open a writable connection
+  con <- file(output_file, open = "wt")
+  sink(con, type = "message")
+
   # get mutation VAF
   vcf_names = gsub("_.*", "", names(vcf))
   vaf_all = vcf@assays@data$VAF %>% apply(2, unlist)
@@ -170,12 +176,21 @@ assign_muts_to_branches_simple <- function(vcf, tree, add1missing = TRUE, ptato_
       message('filtering out ', sum(remove_single_muts), ' of ', length(remove_single_muts), ' non-PTATO muts from ', pta_samp)
       wbranch[sc_muts][remove_single_muts] = "NOBRANCH"
     }
+
+    # Stop catching the filter message 
+    on.exit(sink(type = "message"), add = TRUE)
     return(wbranch)
   }
 }
 
 # in a percentage way, assign mutations to branches (do all expected cells have it, and none of the others? assign when x percent of branch have the mutation) ------------------
 assign_muts_to_branches_percentage <- function(vcf, tree, add1missing = TRUE, ptato_grl = NA, percent = 0.4) {
+  # File to catch filter message 
+  output_file <- paste0(cellphydir, "/Filter_muts_", as.character(percent),".txt")
+  # open a writable connection
+  con <- file(output_file, open = "wt")
+  sink(con, type = "message")
+
   # get mutation VAF
   vcf_names = gsub("_.*", "", names(vcf))
   vaf_all = vcf@assays@data$VAF %>% apply(2, unlist)
@@ -275,6 +290,9 @@ assign_muts_to_branches_percentage <- function(vcf, tree, add1missing = TRUE, pt
       message('filtering out ', sum(remove_single_muts), ' of ', length(remove_single_muts), ' non-PTATO muts from ', pta_samp)
       wbranch[sc_muts][remove_single_muts] = "NOBRANCH"
     }
+
+    # Stop catching the filter message 
+    on.exit(sink(type = "message"), add = TRUE)
     return(wbranch)
   }
 }
