@@ -156,10 +156,7 @@ if [ -z "$PREFIX" ] ; then
         PREFIX=${INPUT/%.vcf/}
         PREFIX=$(basename ${PREFIX})
 fi
-# Create percentage if no percentage is given
-if [ -z "$PERCENT" ] ; then 
-        PERCENT=0.4
-fi
+
 # Create percentage if no percentage is given
 if [ -z "$PLOTONLY" ] ; then 
         PLOTONLY=FALSE
@@ -191,9 +188,14 @@ if [ $PLOTONLY == FALSE ]; then
 fi
 
 
-
-# make the tree in R ---------------
-Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP $PERCENT ${PREFIX}
+# Create percentage if no percentage is given
+if [ -z "$PERCENT" ] ; then 
+        # Loop over tree with increasing increments 
+        for PERCENT in $(seq 0.0 0.1 0.9); do Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP $PERCENT ${PREFIX}; done     
+else ;
+        # make the tree in R ---------------
+        Rscript --vanilla ${SOURCE}/cellPhyPlotTree.R $OUTPUTDIR $INPUT $PTATODIR $OUTGROUP $PERCENT ${PREFIX}
+fi
 
 
 # Create upset plot ---------------
