@@ -206,7 +206,7 @@ check_0_mm <- function(mut_matrix, remove_min = 0) {
 #' @export
 fit_to_signatures_strict_tree <- function(mut_matrix, signatures, max_delta = 0.01, remove_min = 20) {
   mut_matrix = check_0_mm(mut_matrix, remove_min)
-  contri = fit_to_signatures_strict(mut_matrix, signatures, max_delta = 0.01)$fit_res$contribution
+  contri = fit_to_signatures_strict(mut_matrix, signatures, max_delta = max_delta)$fit_res$contribution
   contri = contri[rowSums(contri) > 0, ]
 }
 # check_reconstructed_cosine ----------------------------------------
