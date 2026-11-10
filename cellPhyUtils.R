@@ -115,7 +115,7 @@ assign_muts_to_branches_simple <- function(vcf, tree, add1missing = TRUE, ptato_
   vcf_names = gsub("_.*", "", names(vcf))
   vaf_all = vcf@assays@data$VAF %>% apply(2, unlist)
   vaf_all[is.na(vaf_all)] = 0
-  colnames(vaf_all) = samples(header(vcf))
+  colnames(vaf_all) = VariantAnnotation::samples(VariantAnnotation::header(vcf))
   
   # make tree table -> above 0 = present
   tt = lapply(colnames(vaf_all), function(cn) {
@@ -195,7 +195,7 @@ assign_muts_to_branches_percentage <- function(vcf, tree, add1missing = TRUE, pt
   vcf_names = gsub("_.*", "", names(vcf))
   vaf_all = vcf@assays@data$VAF %>% apply(2, unlist)
   vaf_all[is.na(vaf_all)] = 0
-  colnames(vaf_all) = samples(header(vcf))
+  colnames(vaf_all) = VariantAnnotation::samples(VariantAnnotation::header(vcf))
   
   # make tree table -> above 0 = present
   tt = lapply(colnames(vaf_all), function(cn) {
@@ -362,7 +362,7 @@ load_tree_with_info <- function(dir, outgr = "NONE", prefix = NULL,
         vafs = normal_vcf@assays@data$VAF %>% apply(2, unlist)
         vafs[is.na(vafs)] = 0
         if (is.null(dim(vafs))) { vafs = matrix(vafs, nrow = 1) }
-        colnames(vafs) = samples(header(vcf))
+        colnames(vafs) = VariantAnnotation::samples(VariantAnnotation::header(vcf))
         normal_pres_frac = sum(vafs[ ,outgr] > 0)/nrow(vafs)
         n_samp = rowSums(vafs > 0)
         high_samp_frac = sum(n_samp > 2 & vafs[ ,outgr] == 0)/nrow(vafs)
